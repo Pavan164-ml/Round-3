@@ -1,0 +1,464 @@
+================================================================================
+  PAVAN KUMAR — DATA ENGINEERING + AI INTERVIEW PREPARATION
+  Round 3: Advanced Data Engineering + GenAI Fundamentals + Application Engineering
+  Interview Date: 26 May 2026 | 4-Day Study Plan: 22-25 May 2026
+================================================================================
+
+================================================================================
+[DAY 1 — Thu 22 May] CODING + ADVANCED DE OVERVIEW
+================================================================================
+
+--- SQL WINDOW FUNCTIONS ---
+
+1. ROW_NUMBER() — assigns unique sequential integer per partition
+   > Latest record per customer: ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) = 1
+
+2. RANK() vs DENSE_RANK() — RANK skips numbers after ties, DENSE_RANK doesn't
+   > RANK: 1,2,2,4 | DENSE_RANK: 1,2,2,3
+
+3. LAG / LEAD — access previous/next row values
+   > LAG(value, 1) OVER (ORDER BY date) — NULL for first row
+
+4. Running total: SUM(amount) OVER (PARTITION BY user ORDER BY dt ROWS UNBOUNDED PRECEDING)
+
+5. NTILE(n) — distributes rows into n buckets
+
+--- CTEs & RECURSIVE CTEs ---
+- WITH cte AS (SELECT ...) — multiple CTEs allowed
+- Recursive: WITH RECURSIVE cte AS (base UNION ALL recursive)
+- Use for org charts, BOM, hierarchy traversal
+- CTE vs subquery vs temp table: CTE for readability, temp table for reuse
+
+--- ADVANCED JOINS ---
+- Self join: table joined to itself
+- ANTI JOIN: LEFT JOIN WHERE right IS NULL (prefer over NOT IN due to NULL issues)
+- LATERAL join: correlated subquery that can reference prior FROM items
+- CROSS JOIN: cartesian product (use with caution)
+
+--- QUERY OPTIMIZATION ---
+- EXPLAIN ANALYZE to read query plan
+- Avoid SELECT *
+- Avoid functions on indexed columns in WHERE
+- Partition pruning in WHERE clause
+- Prefer JOIN over correlated subqueries
+
+--- DELTA LAKE / SPARK SQL ---
+- MERGE INTO: upsert logic
+- OPTIMIZE + ZORDER for file compaction
+- DESCRIBE HISTORY for table lineage
+- Time travel: VERSION AS OF / TIMESTAMP AS OF
+
+--- PYSPARK CORE TRANSFORMATIONS ---
+- filter, select, withColumn, groupBy+agg, join
+- Broadcast hint: df1.join(df2.hint("broadcast"), "key")
+- explode (array flattening), pivot (row→column)
+- UDFs: Python UDF (slow, row-by-row) vs Pandas UDF (vectorized, Arrow, 10-100x faster)
+
+--- READING/WRITING DATA ---
+- spark.read.parquet / .json / .delta
+- Write modes: overwrite, append, ignore, errorIfExists
+- Partition write: .partitionBy('date', 'country')
+
+--- SPARK SCHEMA MANAGEMENT ---
+- StructType, StructField, ArrayType, MapType
+- Explicit schema > schema inference (10x faster on large data)
+- Delta schema evolution: mergeSchema option
+
+--- PYTHON OOP ---
+- Classes, inheritance, MRO (Method Resolution Order)
+- Dunder methods: __init__, __repr__, __str__, __eq__
+- dataclasses for config/POJO objects
+- Abstract base classes for pipeline interfaces
+
+--- PYTHON GENERATORS ---
+- yield, generator expressions (memory efficient)
+- next(), StopIteration
+- Use: lazy batch processing of large files
+
+--- PYTHON DECORATORS & CONTEXT MANAGERS ---
+- functools.wraps preserves metadata
+- @timer decorator for pipeline step profiling
+- with statement: __enter__/__exit__
+- contextlib.contextmanager for simple context managers
+
+--- PYTHON ASYNC ---
+- async def, await, asyncio.gather
+- I/O-bound: API calls, DB queries
+- threading vs asyncio vs multiprocessing
+
+--- DSA BASICS ---
+- Big-O: O(1) hash, O(n log n) sort, O(n²) nested
+- dict/set: O(1) operations, defaultdict, Counter
+- heap: heapq.nlargest(k) for top-k — O(n log k) vs full sort
+- Binary search on sorted data
+
+
+================================================================================
+[DAY 2 — Fri 23 May] ADVANCED DATA ENGINEERING DEEP DIVE + START GenAI
+================================================================================
+
+--- DISTRIBUTED SYSTEMS ---
+- CAP Theorem: pick 2 of 3 (C,A,P). Cassandra=AP, HBase=CP, RDBMS=CA
+- Partitioning: Hash vs Range vs List. Skew → salting. repartition vs coalesce
+- Shuffle triggers: groupBy, join, repartition. Shuffle spill to disk
+- Tuning: spark.sql.shuffle.partitions = 2-3x cores
+- Broadcast join: small table broadcast to all executors — no shuffle
+
+--- SPARK EXECUTION MODEL ---
+- Driver → DAG Scheduler → Task Scheduler → Executors
+- Lazy evaluation: transformations build DAG, actions trigger execution
+- Catalyst Optimizer: rule-based + cost-based optimization
+- Tungsten Engine: off-heap memory, code generation
+- Stage boundary: shuffle dependencies
+
+--- SPARK MEMORY MANAGEMENT ---
+- On-heap vs off-heap
+- Storage (cached data) vs Execution (shuffle, joins) memory
+- spark.memory.fraction = 0.6 (execution + storage heap)
+- OOM fixes: increase executor memory, spill to disk, reduce caching
+- Persist levels: MEMORY_ONLY, MEMORY_AND_DISK, DISK_ONLY
+
+--- SPARK PERFORMANCE TUNING ---
+- AQE: spark.sql.adaptive.enabled=true — auto coalesce partitions, skew join, switch join strategy
+- Predicate pushdown: filter early
+- Column pruning: select only needed columns
+- Partition skipping: use partition columns in WHERE
+- Kryo serialization: faster than Java serialization
+- Caching: cache only what's reused, use MEMORY_AND_DISK for safety
+
+--- SPARK JOINS ---
+- Broadcast Hash Join: small table ≤ 10MB (autoBroadcastJoinThreshold)
+- Sort-Merge Join: large-to-large, O(n log n)
+- Shuffle Hash Join: one side fits in hash table
+- Skew join handling: skew hints, salted join keys
+- Cross join pitfalls: unintended cartesian product
+
+--- SPARK STREAMING ---
+- DStream (legacy RDD-based) vs Structured Streaming (micro-batch + continuous)
+- Watermarking: define late data cutoff
+- Checkpointing: fault tolerance
+- Trigger types: once, fixed interval, available-now
+
+--- DELTA LAKE ---
+- Transaction log (_delta_log): ACID on object storage
+- Snapshot isolation: readers see consistent state despite concurrent writes
+- Optimistic concurrency: detect conflicts, retry
+- MERGE INTO: SCD Type 1/2 upserts
+- OPTIMIZE: coalesce small files
+- ZORDER: multi-dimensional clustering (read skipping)
+- VACUUM: remove old files (default retention 7 days)
+- Time travel: VERSION AS OF / TIMESTAMP AS OF
+- Schema evolution: allowColumn ... mergeSchema
+
+--- MEDALLION ARCHITECTURE ---
+- Bronze: raw ingestion (append-only)
+- Silver: cleaned, deduplicated, validated
+- Gold: aggregated, business-ready
+- Quality gates between layers
+
+--- KAFKA ---
+- Topics, Partitions, Offsets, Producers, Consumers, Consumer Groups
+- Leader/Follower replicas, Replication factor
+- Retention: 7 days default (configurable per topic)
+- Max message size: 1MB default
+- Delivery semantics: at-most-once, at-least-once, exactly-once
+- Exactly-once: idempotent producer + transactional consumer
+- Consumer offset: auto-commit (at-most-once) vs manual commit (at-least-once)
+- Structured Streaming + Kafka: readStream.format("kafka")
+- Starting offsets: earliest, latest
+
+--- DATA MODELING ---
+- SCD Type 1 (overwrite), Type 2 (add row with dates), Type 3 (add column)
+- Star (denormalized, fast queries) vs Snowflake (normalized, storage savings)
+- Data Vault 2.0: Hubs (business keys), Links (relationships), Satellites (descriptive)
+- Grain definition: level of detail per row
+
+--- DATA QUALITY ---
+- Dimensions: Completeness, Accuracy, Consistency, Timeliness, Uniqueness
+- Great Expectations / Deequ for validation
+- Anomaly detection: Z-scores, moving averages (your Databricks project)
+- Idempotency: INSERT OVERWRITE vs APPEND | MERGE for upserts
+
+--- AIRFLOW ---
+- DAG dependencies, XComs (pass data between tasks)
+- Sensors (wait for external event)
+- TaskGroups (replacing SubDAGs)
+- SLA miss callbacks
+- Dynamic DAGs: generate DAGs from config
+- Pool + Slot management: control concurrency
+
+--- STORAGE FORMATS ---
+- Parquet: columnar, Snappy/GZIP/ZSTD, predicate pushdown (analytics)
+- ORC: columnar, better compression than Parquet (Hive)
+- Avro: row-based, schema evolution (Kafka)
+- Small file problem: OPTIMIZE in Delta | compaction jobs
+- Z-ordering: multi-dimensional clustering > Hive bucketing
+
+--- AWS ---
+- EMR: Master + Core + Task nodes. Task nodes on Spot instances for cost
+- Athena: serverless SQL on S3. Partition projection. CTAS for transformed tables
+- Glue: Crawlers, Catalog, ETL jobs, Bookmarks for incremental loads
+- S3: partition keys, Intelligent-Tiering, S3 Select, lifecycle policies
+- S3 consistency: strong read-after-write (since 2020)
+- IAM: Roles vs Users vs Policies. Least privilege. Instance profiles
+- VPC: Subnets, NAT GW, IGW, Security Groups (stateful) vs NACLs (stateless)
+- Cost optimization: Spot instances, S3 Intelligent-Tiering, partition pruning in Athena
+
+--- NLP FOUNDATIONS ---
+- Tokenization: Byte-Pair Encoding (BPE). Token ≠ word
+- Embeddings: Word2Vec/GloVe (static) vs context-aware (BERT/GPT)
+- Embedding dimensions, Cosine similarity
+- Attention: Q(Query), K(Key), V(Value). softmax(QK^T/√d_k)·V
+- Multi-head attention: parallel attention computations
+- Transformer: Encoder (BERT) vs Decoder (GPT) vs Encoder-Decoder (T5)
+- Positional encoding (no recurrence), Layer norm, Residual connections
+
+
+================================================================================
+[DAY 3 — Sat 24 May] COMPLETE GenAI + APP ENGINEERING + MLOps
+================================================================================
+
+--- FOUNDATION MODELS ---
+- BERT: Masked Language Modeling, bidirectional. Fine-tune for classification, NER, QA
+- GPT: Causal LM (next token prediction). GPT-3 175B, GPT-4 multimodal
+- Scaling laws: larger models + more data → better performance
+- Claude: Constitutional AI, RLHF
+- LLaMA 2/3, Mistral: open source, self-hostable
+- Model sizes: 7B vs 70B vs 175B tradeoffs (quality vs cost vs latency)
+- Quantization: INT8, INT4, GGUF — 7B quantized runs on a laptop
+
+--- TRAINING & FINE-TUNING ---
+- Pre-training: unsupervised on massive text corpus
+- Fine-tuning: supervised on task-specific labeled data
+- RLHF: human preference feedback to align model behavior
+- LoRA: Low-Rank Adaptation — freeze base, add adapter matrices (rank r)
+  - Only 0.1% of params trained
+- QLoRA: quantized base + LoRA — GPU memory efficient
+- PEFT: Parameter-Efficient Fine-Tuning (LoRA, Adapters, Prefix Tuning)
+
+--- PROMPT ENGINEERING ---
+- Zero-shot: "Classify this text as positive or negative"
+- Few-shot: provide examples in prompt
+- Chain-of-Thought (CoT): "Let's think step by step"
+- Tree-of-Thought: explore multiple reasoning paths
+- System prompts: set role and behavior
+- Temperature (creativity), Top-p (nucleus sampling), Top-k
+- Prompt injection: malicious input hijacks prompt — use input sanitization
+
+--- RAG ARCHITECTURE ---
+- Indexing: Chunk docs → Embed → Store in Vector DB
+- Query: Embed query → ANN search → Retrieve top-k chunks → LLM generates answer
+- Your LLM metadata app: wikis/git/KT transcripts indexed, retrieved per table
+- Chunking: fixed-size, sentence, semantic, recursive. Chunk overlap matters
+- Vector DBs: FAISS (local), Pinecone (managed), Milvus, Weaviate, Chroma
+- ANN index: HNSW (Hierarchical Navigable Small World)
+- Hybrid search: vector similarity + keyword (BM25)
+
+--- LANGCHAIN ---
+- Chains: LLMChain, RetrievalQA, ConversationalRetrievalChain
+- Agents: LLM decides which tool to use
+- Memory: ConversationBufferMemory for chat history
+- LangGraph: stateful agent workflows (DAG of nodes)
+
+--- LLAMAINDEX ---
+- Data connectors: S3, Notion, GitHub, Confluence
+- Index types: VectorStoreIndex, KnowledgeGraphIndex
+- Query engines: different ways to query indexed data
+- LlamaIndex is data-focused; LangChain is chain/agent-focused
+
+--- LLM EVALUATION ---
+- ROUGE, BLEU: n-gram overlap metrics
+- Perplexity: lower = better (model confidence)
+- RAGAS: faithfulness, relevance, context recall, context precision
+- LLM-as-judge: use another LLM to evaluate outputs
+- Human evaluation: gold standard
+
+--- HALLUCINATION ---
+- Causes: autoregressive generation, training data gaps, model not trained to say "I don't know"
+- Mitigations: RAG (ground in real data), few-shot examples, structured output (JSON mode)
+  Chain-of-Thought, self-consistency (multiple samples)
+
+--- LLM INFERENCE OPTIMIZATION ---
+- KV Cache: cache computed keys/values during generation
+- Continuous batching: batch multiple requests in GPU memory
+- vLLM, TGI: optimized inference engines
+- Quantization: reduce model size for serving
+- Latency vs throughput tradeoffs
+
+--- FASTAPI ---
+- Path params, query params, Pydantic request/response models
+- Async endpoints: async def for I/O bound operations
+- Dependency injection: reusable dependencies (auth, DB sessions)
+- Auto-generated OpenAPI docs (Swagger UI)
+- CORS middleware for cross-origin requests
+- BackgroundTasks: async jobs after response
+- HTTPException + custom exception handlers
+- Pydantic validation errors → 422
+
+--- REST API DESIGN ---
+- Stateless, resource-based URLs: /v1/customers/{id}/segments
+- HTTP verbs: GET, POST, PUT, DELETE, PATCH
+- Status codes: 200, 201, 400, 401, 403, 404, 422, 500
+- Pagination: cursor-based (stable) vs offset-based (can skip on writes)
+- Versioning: /v1/ in URL path
+
+--- AUTHENTICATION ---
+- API Keys: simple, no user context
+- OAuth 2.0: authorization framework
+- JWT: Header.Payload.Signature — stateless auth
+- Bearer tokens in Authorization header
+- RBAC: roles mapped to permissions
+
+--- DATABASES ---
+- SQL vs NoSQL : ACID (RDBMS) vs flexible schema (MongoDB) vs caching (Redis)
+- PostgreSQL: CTEs, Window functions, JSONB, EXPLAIN ANALYZE, indexing (B-tree, GIN, GiST)
+- Connection pooling: pgBouncer, max_overflow, pool_size
+- SQLAlchemy: ORM + Core. Async with FastAPI. Alembic for migrations
+
+--- REDIS CACHING ---
+- Cache-aside: app checks cache first, miss → query DB → write to cache
+- Read-through, Write-through, Write-behind
+- TTL: Time-To-Live for key expiration
+- Data types: String, Hash, List, Set, Sorted Set
+- Cache invalidation: hardest problem in computer science
+
+--- DOCKER ---
+- Dockerfile: FROM, RUN, COPY, CMD, ENTRYPOINT, ENV
+- Multi-stage builds: build deps → copy only artifacts → smaller image
+- Layer caching: order FROM least-changed to most-changed instructions
+- docker-compose: services, networks, volumes, depends_on, healthcheck
+
+--- KUBERNETES ---
+- Pod (smallest unit), Deployment (desired state), Service (network endpoint)
+- ConfigMap, Secret: configuration injection
+- Ingress: external access routing
+- HPA: HorizontalPodAutoscaler (CPU/memory based)
+- Liveness (is alive?) vs Readiness (ready for traffic?) probes
+- Rolling updates vs Blue-Green deployment
+
+--- CI/CD ---
+- Stages: lint → test → build → push → deploy
+- Environment promotion: dev → staging → prod
+- GitHub Actions: events trigger workflows
+- Pytest for Spark: test with small DataFrames (100 rows)
+- Code coverage thresholds
+
+--- MLFLOW ---
+- Experiment tracking: log_metric, log_param, log_artifact
+- Model Registry: stages Staging → Production
+- Model serving: MLflow models served as REST API
+
+--- FEATURE STORES ---
+- Online store (real-time) vs Offline store (batch training)
+- Point-in-time correct joins
+- Feature reuse across teams/models
+- Tools: Feast, Databricks Feature Store, SageMaker Feature Store
+
+--- MODEL DEPLOYMENT ---
+- Batch inference: daily on Delta table → writes predictions
+- Real-time inference: FastAPI + model in memory
+- A/B testing: route % traffic to new model
+- Shadow mode: run new model in parallel without serving results
+- Canary: gradual rollout
+- Model monitoring: data drift (input distribution changes), prediction drift
+
+
+================================================================================
+[DAY 4 — Sun 25 May — Light Day] BEHAVIORAL + STAR STORIES + MOCK Q&A
+================================================================================
+
+--- STAR STORIES READY ---
+1. Large-Scale Pipeline: AWS EMR 100TB/day, partitioned Parquet, AQE, Airflow
+   > 100TB/day, 200M+ annual revenue, 10% quarterly targeting increase
+
+2. Observability: Databricks Lakehouse Monitoring, 8 tables, 30-day avg thresholds
+   > Early detection before business impact
+
+3. GenAI / LLM: LLM Metadata Generator — RAG pipeline, wikis/Git/KT transcripts
+   > 10+ tables documented, ~2hrs saved per table
+
+4. Automation: Airflow Status Reports — 3-hourly aggregated DAG status reports
+   > 2hrs/day manual monitoring eliminated
+
+5. Cross-functional: Machine-Level Targeting — extended data model
+   > 10% per quarter increase in targeting rate
+
+--- STAR STORIES NEEDING DRAFT ---
+6. Technical challenge under pressure:
+   [DRAFT SPACE]
+   S: [Situation - urgent production issue]
+   T: [Task - what needed to be fixed]
+   A: [Action - what you did]
+   R: [Result - quantifiable outcome]
+
+7. 3-year vision:
+   [DRAFT SPACE]
+   "I see myself as a Lead/Senior Data Engineer who bridges Data Engineering and AI/ML,
+   architecting production-grade GenAI pipelines, mentoring junior engineers, and driving
+   technical decisions across data platform architecture."
+
+8. Why this company/role:
+   [DRAFT SPACE]
+   - Align with [Company]'s mission in [domain]
+   - Excited by [specific tech stack they use]
+   - Opportunity to scale data/AI platform
+   - Culture of [something specific]
+
+--- QUICK REFERENCE CHEATS ---
+- CAP: CP (HBase), AP (Cassandra), CA (RDBMS)
+- Spark memory: fraction=0.6, shuffle partitions=200 default
+- AQE: autoBroadcastJoinThreshold=10MB
+- Attention: softmax(QK^T/√d_k)·V
+- GPT-3: 175B params. LoRA rank r=8 adds 0.1%
+- RAG: Embed → ANN → top-k → LLM
+- SQL: ROW_NUMBER for latest per group, LAG for previous value
+- Kafka: 7-day retention, idempotent + transactional for exactly-once
+- O(n) hash join, O(n log n) sort-merge, O(n) broadcast
+- Python: mutable default arg trap, generator > list for memory
+
+
+================================================================================
+STUDY PROGRESS TRACKING
+================================================================================
+
+[DAY 1 — 22 May] ☐ ☐ ☐ ☐ ☐
+  ☐ SQL Window Functions & CTEs
+  ☐ PySpark Transformations & Performance
+  ☐ Python OOP, Generators, Decorators, Async
+  ☐ DSA: Complexity, Hash Maps, Heap
+  ☐ Quick Advanced DE: CAP, Partitioning, Shuffle
+
+[DAY 2 — 23 May] ☐ ☐ ☐ ☐ ☐ ☐
+  ☐ Distributed Systems (CAP, Partitioning, Shuffle)
+  ☐ Spark (Execution Model, Memory, Tuning, Joins, Streaming)
+  ☐ Delta Lake (Internals, Operations, Medallion)
+  ☐ Kafka (Concepts, Delivery, Spark Integration)
+  ☐ Data Modeling & Data Quality
+  ☐ Start GenAI: NLP, Attention, Transformers
+
+[DAY 3 — 24 May] ☐ ☐ ☐ ☐ ☐ ☐ ☐
+  ☐ Foundation Models (BERT, GPT, LLaMA, Quantization)
+  ☐ Fine-tuning (LoRA, QLoRA, RLHF)
+  ☐ RAG (Architecture, Chunking, Vector DBs)
+  ☐ LangChain & LlamaIndex
+  ☐ FastAPI & REST API Design
+  ☐ Docker & Kubernetes
+  ☐ CI/CD & MLOps (MLflow, Feature Stores)
+
+[DAY 4 — 25 May] ☐ ☐ ☐ ☐
+  ☐ Complete STAR stories (Technical Challenge, 3yr Vision, Why Company)
+  ☐ Mock Q&A over all sheets
+  ☐ Quick Reference review
+  ☐ Rest & Relax
+
+
+================================================================================
+INTERVIEW DAY CHECKLIST — 26 May 2026
+================================================================================
+  ☐ Review this entire document (30 min)
+  ☐ Rehearse STAR stories out loud
+  ☐ Review Quick Reference (Spark config, attention formula, SQL patterns)
+  ☐ Be ready to code: SQL (window functions), PySpark (transformations), Python (OOP)
+  ☐ Prepare questions for the interviewer
+  ☐ Deep breaths, you've got this! 🚀
+================================================================================

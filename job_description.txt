@@ -1,0 +1,28 @@
+Key Responsibilities
+
+Data Architecture: Design scalable distributed data processing systems.
+Pipeline Development: Build ETL/ELT pipelines for complex datasets.
+AI Integration: Implement and fine-tune generative AI capabilities.
+App Engineering: Develop backend services to expose data products.
+System Optimization: Improve code performance, data quality, and storage efficiency.
+Mentorship: Guide junior engineers and advocate for technical best practices.
+Required Technical Skills
+
+Primary Expertise (Expert Level)
+
+Data Engineering: Apache Spark, Hadoop, Kafka, and Databricks/Delta Lake.
+Python Ecosystem: PySpark, Pandas, NumPy, and performance tuning.
+Cloud Platforms: Advanced deployment experience within AWS or Azure.
+Data Modeling: Expert knowledge of relational and non-relational databases.
+ 
+
+Secondary Expertise (Intermediate Level)
+
+GenAI / LLMs: Experience with LangChain, LlamaIndex, and vector databases (e.g., Pinecone, Milvus).
+Application Engineering: Building APIs using FastAPI, Flask, or Node.js.
+DevOps / MLOps: Containerization via Docker, Kubernetes, and CI/CD deployment workflows.
+Qualifications
+
+Education: Bachelor’s degree in Computer Science or a related field.
+Experience: 7+ years of professional software engineering experience.
+Portfolio: Proven track record of shipping production-grade data pipelines.
