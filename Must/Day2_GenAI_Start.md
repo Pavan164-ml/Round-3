@@ -55,6 +55,10 @@ What is lemmatization and stemming? What is the difference between them?
     - It considers the context and part of speech of the word to produce accurate lemmas (e.g., "running" → "run", "better" → "good").
     - It is slower than stemming but provides more meaningful results.
 
+
+What are Named Entity relationship? Why is it important? How is it used?
+  - NER is basically 
+
 0.1. What are different types of lemmetization and stemming techniques?
   - Stemming techniques:
     - Porter Stemmer: A widely used algorithm that applies a series of rules to reduce words to their root form (e.g., "running" → "run").
@@ -327,10 +331,152 @@ Is there any topic that I missed in the foundations part that you think is impor
 
 
 
-What is GAN?
+What is GAN? 
   - GAN (Generative Adversarial Network) is a type of neural network architecture that consists of two components: 
+  - It is basically a data augmentation technique 
     - Generator
     - Discriminator
+  - Used when there is less data to train on or when we have class imbalance.
+
+
+Explan transformer Architecture:
+The Transformed architecture is a sequence to sequence model build on an encoder-decoder structure.
+The encoder process the input text and creates a rich context-aware vector representation of the input text/question.
+The decoder takes the vector representation from the encoder and generates the output text/answer.
+The core mechanism enabling this is the self attention mechanism, which allows the model to weigh the importance of different words in the input text/question and generate the output text/answer in a contextually relevant manner.
+
+------------------------------
+## 🧩 1. LangChain Fundamentals
+
+* Why we use it: 
+- LangChain is an LLM orchestration framework. 
+- It acts as an engineering layer that helps developers glue together Large Language Models (LLMs) with other tools, databases, and APIs to build real-world software applications.
+
+* How it does it: It connects modules in a sequence where the output of one step becomes the input for the next step.
+
+
+* What LangChain Orchestrates?
+- Instead of just sending a single question to an LLM and getting one answer back, LangChain lets you coordinate complex, multi-step actions:
+  1. Chains: It links multiple prompts and models together in a specific order. 
+    - For example, one LLM can summarize a text, and a second LLM can translate that summary into Spanish.
+  2. Data Connections: It connects LLMs to your private data sources using a method called Retrieval-Augmented Generation (RAG). 
+    - This lets the AI read files, PDFs, or databases to answer questions.
+  3. Memory: It saves past chat history so stateless AI models can remember what you said earlier in the conversation.
+  4. Agents: It allows the LLM to decide on its own which external tools to use—like a calculator or a web search engine—to finish a task.
+
+* What are agents ?
+  Agents are AI programs that can make decisions on their own. Instead of just following a strict, step-by-step list of instructions, an agent acts like a smart assistant. You give it a final goal, and it figures out the best way to reach that goal. It does this by using a loop of four steps:
+    1. Think: The AI looks at your goal and makes a plan.
+    2. Choose: The AI picks the best tool for the job.
+    3. Act: The AI uses the tool, like searching the web or using a calculator.
+    4. Check: The AI looks at the tool's result and decides what to do next.
+
+* How does GenAI applications store the past chat history? 
+
+## What Are Agents?
+Agents are AI programs that can make decisions on their own.
+Instead of just following a strict, step-by-step list of instructions, an agent acts like a smart assistant. You give it a final goal, and it figures out the best way to reach that goal.
+It does this by using a loop of four steps:
+
+* Think: The AI looks at your goal and makes a plan.
+* Choose: The AI picks the best tool for the job.
+* Act: The AI uses the tool, like searching the web or using a calculator.
+* Check: The AI looks at the tool's result and decides what to do next.
+
+
+
+What is a sequence to Sequence to model?
+    - A sequence to sequence model is a model that takes a sequence of input tokens and generates a sequence of output tokens.
+    - The structure is the core of most translation, summarization and Conversational AI systems.
+
+
+------------------------------
+## How GenAI Apps Store Chat History
+AI models are stateless, meaning they forget everything the moment a chat ends.
+To make an app feel like a real conversation, developers must save the history and feed it back to the AI. Here is how apps do that behind the scenes:
+  ## 1. Short-Term Memory
+  * The Chat Box: The app saves every message you and the AI send into a simple list.
+  * The Hidden Re-send: Every time you send a new message, the app secretly bundles all previous messages with your new one.
+  * The Cost: Because you send the whole history every time, long chats become expensive and slow.
+
+## 2. Long-Term Storage
+For chats that last days or weeks, apps save the messages into databases:
+
+* Session Databases: Tools like Redis or MongoDB save your exact chat logs under a unique User ID.
+* Vector Databases: Tools like Pinecone or Chroma change old conversations into math numbers called vectors. This lets the AI search its past memory for relevant facts without reading the whole history.
+
+## 3. History Management
+To keep chats fast, LangChain and other tools manage the history in clever ways:
+
+* Window Memory: The app only remembers the last 5 or 10 messages and drops the oldest ones.
+* Summary Memory: A separate LLM reads the old chat, writes a quick summary, and attaches that summary to your new message.
+
+
+
+**Explanation of Important LangChain Components:**
+
+- **LLMChain**: This component lets you send a prompt template directly to a large language model (LLM), gets a response, and handles cleaning up the output so it's ready to use.
+- **RetrievalQA**: Combines an LLM with a document search engine. This means the AI can find information from documents or databases and use it to answer your questions, rather than just relying on what it has memorized from training.
+- **ConversationBufferMemory**: Saves all previous messages from the conversation. This way, the AI can understand and refer back to earlier parts of the discussion, making conversations more natural and coherent.
+- **Agents**: These give the LLM the ability to decide which tool or resource it should use to accomplish a task—such as using a calculator, retrieving information from a database, or searching the web.
+- **LangGraph**: Provides a way to create complex, advanced workflows that can loop and involve multiple specialized agents working together.
+
+**Real-World Example:**  
+Imagine an AI-powered customer service bot. When you ask about a refund, the bot can:
+- Look up your order number (using retrieval tools),
+- Calculate the correct refund (using an agent and possibly a calculator),
+- And send you a confirmation email (another agent action),
+all within one smart conversation.
+
+------------------------------
+## 🗂️ 2. LlamaIndex Fundamentals
+
+* Why we use it: To focus deeply on data ingestion, indexing, and fast retrieval for large multi-document knowledge bases.
+* How it does it: It ingests raw data, structures it into searchable indexes, and fetches the best facts for the LLM.
+* Important Components:
+* VectorStoreIndex: Turns text documents into mathematical numbers (embeddings) and stores them for semantic search.
+   * QueryEngine: A simple interface that takes a user question, searches the index, and outputs an answer.
+   * Data Connectors: Specialized loaders that grab files from sources like S3, Notion, GitHub, and Confluence.
+   * RouterQueryEngine: A smart selector that decides which specific document index is best suited to answer a user's question.
+* Real-World Example: An HR bot that safely connects to your company's Notion and Confluence to answer policy questions.
+
+------------------------------
+## 🛑 3. Hallucination & Grounding
+
+* Why we use it: To stop AI models from confidently making up fake facts or wrong answers.
+* How it does it: It forces the model to stick strictly to verified external documents instead of guessing the next word based on old training data.
+* Important Components:
+* RAG Grounding: Pinning the AI's answers directly to retrieved factual documents.
+   * Structured Output (JSON): Forcing the AI to reply in a strict data format so it does not wander off-topic.
+   * Self-Consistency: Asking the AI the same question multiple times and picking the most common answer.
+   * Citation Prompting: Ordering the AI to show exactly which sentence in the source text gave it the answer.
+* Real-World Example: A legal assistant AI that must quote the exact page and section of a law code before giving advice.
+
+------------------------------
+## 📊 4. LLM Evaluation Metrics
+
+* Why we use it: To mathematically measure the quality, accuracy, and safety of your AI model's answers.
+* How it does it: It compares the AI's answer against real human text or tests how well it stays loyal to source documents.
+* Important Components:
+* BLEU: Checks word precision by matching translation outputs against a trusted human reference.
+   * ROUGE: Checks word recall to see if an AI summary captured all core points of the original text.
+   * Perplexity: Measures how confused the model is by text. Lower scores mean the AI understands the text better.
+   * RAGAS: Evaluates RAG pipelines based on Faithfulness (is it factual?), Answer Relevance, and Context Precision.
+* Real-World Example: A team testing a new medical chatbot uses RAGAS to verify that 100% of its medical answers are grounded in real journals.
+
+------------------------------
+## ✍️ 5. Prompt Engineering
+
+* Why we use it: To guide and shape the AI's behavior, style, and logic without changing its core programming.
+* How it does it: By choosing specific words, structures, examples, and math constraints inside the input text box.
+* Important Components:
+* Zero-shot vs Few-shot: Asking for something directly vs giving 2-3 clean examples first to show the AI how to do it.
+   * Chain-of-Thought (CoT): Adding "think step-by-step" to the prompt to force the AI to solve complex logic before answering.
+   * Temperature & Top-p: Settings that tune the AI randomness. Lower numbers equal strict facts; higher numbers equal creative writing.
+   * System Prompt: Behind-the-scenes rules that establish the permanent persona and safety boundaries of the AI.
+* Real-World Example: Setting an AI coding assistant's temperature to 0 and forcing JSON mode to ensure it outputs clean code blocks.
+
+
 # =============================================================================
 # PART 1: ATTENTION MECHANISM — THE KEY INSIGHT
 # =============================================================================
@@ -343,17 +489,15 @@ Where:
   - Q (Query): what we're looking for (e.g., current word)
   - K (Key): what each word offers (e.g., all words in sentence)
   - V (Value): the actual information to retrieve
-  - √d_k: scaling factor to prevent large dot products from pushing softmax to extrem
 
 MULTI-HEAD ATTENTION:
-  - Run attention h times in parallel with different learned projections
+  - Run attention n times in parallel with different learned projections
   - Concatenate results → Project to final dimension
   - Each head can learn different relationships (syntax, semantics, position)
 
 WHY ATTENTION REPLACED RNNs:
   - Parallelizable: all positions computed simultaneously (vs RNN sequential)
   - Long-range dependencies: direct path between any positions (vs RNN vanishing gradient)
-  - O(n²) vs RNN O(n) for length n — tradeoff is quadratic compute
 
 SELF-ATTENTION vs CROSS-ATTENTION:
   - Self-attention: Q, K, V all from same sequence (encoder, decoder self-attention)
